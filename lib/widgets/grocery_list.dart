@@ -35,10 +35,10 @@ void _removeItems(GroceryItem item){
 
 @override
   Widget build(BuildContext context) {
-    Widget content = const Center(child:Text("Please Click the + Button to add an Item"));
-if(_groceryItems.isNotEmpty)
-{
-      content: ListView.builder(
+    Widget content = const Center(child:Text("Please Click the + Button to add an Item")
+    );
+if(_groceryItems.isNotEmpty) {
+      content = ListView.builder(
         itemCount: _groceryItems.length,
         itemBuilder: (ctx, index) => Dismissible(
           onDismissed: (direction){
