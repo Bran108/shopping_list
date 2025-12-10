@@ -12,7 +12,7 @@ class GroceryList extends StatefulWidget{
   State<GroceryList> createState() => _GroceryListState();
 }
 class _GroceryListState extends State<GroceryList> {
-  final List<GroceryItem> _groceryItems = [];
+  List<GroceryItem> _groceryItems = [];
   
   void _loadItems() async {
     final url = Uri.https(
@@ -38,6 +38,9 @@ class _GroceryListState extends State<GroceryList> {
         ),
       );
     }
+    setState(() {
+      _groceryItems = _loadedItems;
+    });
   }
 
   @override  
@@ -46,16 +49,19 @@ class _GroceryListState extends State<GroceryList> {
     _loadItems();
   }
 
-  void _addItem() async{
-    final newItem = await Navigator.of(context).push<GroceryItem>(
-      MaterialPageRoute(builder: (ctx)=> const NewItem())
-    );
-    final url = Uri.https(
-        'shopping-list-4fe79-default-rtdb.firebaseio.com',
-        'shopping-list.json',
-      );
-    final response = http.get(url);
+  void _addItem() async {
+    final newItem = await Navigator.of(
+      context,
+    ).push<GroceryItem>(MaterialPageRoute(builder: (ctx) => const NewItem()));
+    if(newItem ==null)
+    {
+      return;
+    }
+    setState(() {
+      _groceryItems.add(newItem);
+    });
   }
+
 void _removeItems(GroceryItem item){
   setState((){
     _groceryItems.remove(item);
