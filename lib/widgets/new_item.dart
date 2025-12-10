@@ -14,14 +14,21 @@ class NewItem extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItem> {
+
+
+
   final _formKey = GlobalKey<FormState>();
   var _enteredName = '';
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.vegetables]!;
+  var _isSending = false;
 
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      setState(() {
+	    _isSending = true;
+    });
 
       final url = Uri.https(
         'shopping-list-4fe79-default-rtdb.firebaseio.com',
@@ -135,12 +142,12 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
+                    onPressed: _isSending ? null: () {
                       _formKey.currentState!.reset();
                     },
                     child: const Text("Reset"),
                   ),
-                  ElevatedButton(onPressed: _saveItem, child: Text("Add Item")),
+                  ElevatedButton(onPressed: _isSending ? null: _saveItem, child: Text("Add Item")),
                 ],
               ),
             ],
