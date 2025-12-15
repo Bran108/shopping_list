@@ -14,9 +14,6 @@ class NewItem extends StatefulWidget {
 }
 
 class _NewItemState extends State<NewItem> {
-
-
-
   final _formKey = GlobalKey<FormState>();
   var _enteredName = '';
   var _enteredQuantity = 1;
@@ -43,14 +40,13 @@ class _NewItemState extends State<NewItem> {
           'category': _selectedCategory.title,
         }),
       );
-      print(response.body);
-      print(response.statusCode);
 
       final Map<String, dynamic> resData = json.decode(response.body);
       if (!context.mounted) {
         return;
       }
-      Navigator.of(context).pop(GroceryItem(
+      Navigator.of(context).pop(
+      GroceryItem(
       id:resData['name'],
       name: _enteredName, 
       quantity: _enteredQuantity,
@@ -92,7 +88,7 @@ class _NewItemState extends State<NewItem> {
                     child: TextFormField(
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(label: Text("Quantity")),
-                      initialValue: '1',
+                      initialValue: _enteredQuantity.toString(),
                       validator: (value) {
                         if (value == null ||
                             value.isEmpty ||

@@ -6,47 +6,45 @@ import 'package:http/http.dart' as http;
 import 'package:shopping_list/data/categories.dart';
 import 'dart:convert';
 
-class GroceryList extends StatefulWidget{
+class GroceryList extends StatefulWidget {
   const GroceryList({super.key});
   @override
   State<GroceryList> createState() => _GroceryListState();
 }
-class _GroceryListState extends State<GroceryList> {
 
-var _isLoading = true;
-String? _error="";
-@override  
-  void initState(){
+class _GroceryListState extends State<GroceryList> {
+  List<GroceryItem> _groceryItems = [];
+  var _isLoading = true;
+  String? _error = "";
+  @override
+  void initState() {
     super.initState();
     _loadItems();
   }
 
-  List<GroceryItem> _groceryItems = [];
-  
+
   void _loadItems() async {
     final url = Uri.https(
       'shopping-list-4fe79-default-rtdb.firebaseio.com',
       'shopping-list.json',
     );
     final response = await http.get(url);
-    if(response.statusCode >400){
-		setState(() {
+    print(response.statusCode);
+    if (response.statusCode > 400) {
+      setState(() {
+        _error = "Failed to fetch data. Try again later";
+      });
+    }
 
-_error = "Failed to fetch data. Try again later";
-
-});
-}
-
-    print(response.body);
-    final Map<String, Map<String, dynamic>> listData = json.decode(
-      response.body,
-    );
-    final List<GroceryItem> _loadedItems = [];
+    final Map<String, dynamic> listData = json.decode(response.body);
+    final List<GroceryItem> loadedItems = [];
     for (final item in listData.entries) {
-      final currentCat = categories.entries.firstWhere(
-        (catItem) => catItem.value.title == item.value['category'],
-      ).value;
-      _loadedItems.add(
+      final currentCat = categories.entries
+          .firstWhere(
+            (catItem) => catItem.value.title == item.value['category'],
+          )
+          .value;
+      loadedItems.add(
         GroceryItem(
           id: item.key,
           name: item.value['name'],
@@ -56,19 +54,16 @@ _error = "Failed to fetch data. Try again later";
       );
     }
     setState(() {
-      _groceryItems = _loadedItems;
+      _groceryItems = loadedItems;
       _isLoading = false;
     });
   }
-
-  
 
   void _addItem() async {
     final newItem = await Navigator.of(
       context,
     ).push<GroceryItem>(MaterialPageRoute(builder: (ctx) => const NewItem()));
-    if(newItem ==null)
-    {
+    if (newItem == null) {
       return;
     }
     setState(() {
@@ -76,47 +71,52 @@ _error = "Failed to fetch data. Try again later";
     });
   }
 
-void _removeItems(GroceryItem item){
-  setState((){
-    _groceryItems.remove(item);
-  });
-  for (var i = 0; i <_groceryItems.length; i++){
-    print(_groceryItems[i].name);
-  }
-}
-
-@override
-  Widget build(BuildContext context) {
-    Widget content = const Center(child:Text("Please Click the + Button to add an Item")
+  void _removeItem(GroceryItem item) async {
+    final index = _groceryItems.indexOf(item);
+    setState(() {
+      _groceryItems.remove(item);
+    });
+    final url = Uri.https(
+      'shopping-list-4fe79-default-rtdb.firebaseio.com',
+      'shopping-list/${item.id}.json',
     );
-    if (_isLoading)
-    {
+    var response = await http.delete(url);
+    if (response.statusCode > 400) {
+      setState(() {
+        _groceryItems.insert(index, item);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget content = const Center(
+      child: Text("Please Click the + Button to add an Item"),
+    );
+    if (_isLoading) {
       content = const Center(child: CircularProgressIndicator());
     }
-if(_groceryItems.isNotEmpty) {
+    if (_groceryItems.isNotEmpty) {
       content = ListView.builder(
         itemCount: _groceryItems.length,
         itemBuilder: (ctx, index) => Dismissible(
-          onDismissed: (direction){
-            _removeItems(_groceryItems[index]);
+          onDismissed: (direction) {
+            _removeItem(_groceryItems[index]);
           },
           key: ValueKey(_groceryItems[index].id),
           child: ListTile(
-          leading: Container(
-            width: 24,
-            height: 24,
-            color: _groceryItems[index].category.color,
+            leading: Container(
+              width: 24,
+              height: 24,
+              color: _groceryItems[index].category.color,
             ),
-          title: Text(_groceryItems[index].name),
-          trailing: Text(_groceryItems[index].quantity.toString()),
+            title: Text(_groceryItems[index].name),
+            trailing: Text(_groceryItems[index].quantity.toString()),
+          ),
         ),
-        )
       );
     }
 
-if (_error != null) {
-      content = Center(child: Text(_error!));
-    }
     return Scaffold(
       appBar: AppBar(
         title: const Text("Your Groceries"),
